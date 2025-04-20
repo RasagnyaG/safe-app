@@ -27,12 +27,12 @@ const App = () => {
 
     const config = {
         androidConfig: {
-            packageName: 'com.freeraspreactnativeexample',
+            packageName: 'com.safeapp',
             certificateHashes: ['AKoRuyLMM91E7lX/Zqp3u4jMmd0A7hH/Iqozu0TMVd0='],
             // supportedAlternativeStores: ['storeOne', 'storeTwo'],
             malwareConfig: {
-                blacklistedHashes: ['FgvSehLMM91E7lX/Zqp3u4jMmd0A7hH/Iqozu0TMVd0u'],
-                blacklistedPackageNames: ['com.freeraspreactnativeexample'],
+                // blacklistedHashes: ['FgvSehLMM91E7lX/Zqp3u4jMmd0A7hH/Iqozu0TMVd0u'],
+                // blacklistedPackageNames: ['com.freeraspreactnativeexample'],
                 suspiciousPermissions: [
                     [
                         'android.permission.INTERNET',
@@ -45,10 +45,10 @@ const App = () => {
             },
         },
         iosConfig: {
-            appBundleId: 'org.reactjs.native.example.FreeraspReactNativeExample',
-            appTeamId: 'your_team_ID',
+            appBundleId: 'com.safeapp',
+            appTeamId: '',
         },
-        watcherMail: 'your_email_address@example.com',
+        watcherMail: 'gudipudirasagnya@gmail.com',
         isProd: true,
     };
 
