@@ -9,6 +9,8 @@ import {
 import { DemoApp } from './DemoApp.tsx';
 import { commonChecks, iosChecks, androidChecks } from './checks.ts';
 import { useEffect } from 'react';
+import RegisterScreen from './screens/RegisterScreen'
+import QuestionsForm from './screens/QuestionsForm.tsx';
 
 const App = () => {
     const [appChecks, setAppChecks] = React.useState([
@@ -229,7 +231,9 @@ const App = () => {
 
     useFreeRasp(config, actions);
 
-    return <DemoApp checks={appChecks} suspiciousApps={suspiciousApps} />;
+//     return <DemoApp checks={appChecks} suspiciousApps={suspiciousApps} />;
+// return <RegisterScreen/>
+return <QuestionsForm/>
 };
 
 export default App;
