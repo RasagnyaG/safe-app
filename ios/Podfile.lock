@@ -4,6 +4,13 @@ PODS:
   - fast_float (6.1.4)
   - FBLazyVector (0.79.1)
   - fmt (11.0.2)
+  - freerasp-react-native (4.0.0):
+    - RCT-Folly
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Codegen
+    - React-Core
+    - ReactCommon/turbomodule/core
   - glog (0.3.5)
   - hermes-engine (0.79.1):
     - hermes-engine/Pre-built (= 0.79.1)
@@ -47,6 +54,7 @@ PODS:
     - React-RCTText (= 0.79.1)
     - React-RCTVibration (= 0.79.1)
   - React-callinvoker (0.79.1)
+  - React-Codegen (0.1.0)
   - React-Core (0.79.1):
     - glog
     - hermes-engine
@@ -1663,6 +1671,7 @@ DEPENDENCIES:
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
+  - freerasp-react-native (from `../node_modules/freerasp-react-native`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
@@ -1733,6 +1742,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - React-Codegen
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -1746,6 +1756,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   fmt:
     :podspec: "../node_modules/react-native/third-party-podspecs/fmt.podspec"
+  freerasp-react-native:
+    :path: "../node_modules/freerasp-react-native"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
   hermes-engine:
@@ -1884,6 +1896,7 @@ SPEC CHECKSUMS:
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: abbac80c6f89e71a8c55c7e92ec015c8a9496753
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
+  freerasp-react-native: 5cc642e77f58562c7f1c410eb9dd54328cd7e1ea
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: c32f2e405098bc1ebe30630a051ddce6f21d3c2e
   RCT-Folly: 36fe2295e44b10d831836cc0d1daec5f8abcf809
@@ -1892,6 +1905,7 @@ SPEC CHECKSUMS:
   RCTTypeSafety: 01b27f48153eb2d222c0ad4737fe291e9549946a
   React: 1195b4ef93124e47a492ec43d8aceb770618ceb0
   React-callinvoker: f8d4f94d6d5da7230803fa4fce2da27c9c843478
+  React-Codegen: 4b8b4817cea7a54b83851d4c1f91f79aa73de30a
   React-Core: 86bb10ed8cf63fe4546350754c85760eb206cb3f
   React-CoreModules: a82c1b604691358c7ee80458a14d2791cdd56f20
   React-cxxreact: b673ea0a99d910a55e316a4b198a59a6d873bd5c
