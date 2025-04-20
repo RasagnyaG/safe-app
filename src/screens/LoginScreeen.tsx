@@ -1,16 +1,17 @@
 import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
-import { Formik } from 'formik';
+import React, { useState } from 'react';
 import * as Yup from 'yup';
+import ReactNativeBiometrics from 'react-native-biometrics'; // 👈 Import biometrics
 import { loginUser } from '../utils/loginuser.js';
 import { StackNavigationProp } from '@react-navigation/stack';
+
+const rnBiometrics = new ReactNativeBiometrics();
 
 const LoginSchema = Yup.object().shape({
   username: Yup.string().required('Username is required'),
   password: Yup.string().required('Password is required'),
 });
 
-
-// Define RootStackParamList if not already defined elsewhere
 type RootStackParamList = {
   Login: undefined;
   HomeScreen: undefined;
@@ -20,74 +21,106 @@ type RootStackParamList = {
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: { navigation: LoginScreenNavigationProp }) {
-interface LoginValues {
+  interface LoginValues {
     username: string;
     password: string;
-}
+  }
 
-interface LoginResponse {
+  interface LoginResponse {
     success: boolean;
     message?: string;
-}
+  }
 
-const handleLogin = async (values: LoginValues): Promise<void> => {
-    try {
-        const { username, password } = values;
-        const response : LoginResponse = await loginUser(username, password);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<{ username?: string; password?: string }>({});
 
-        if (response.success) {
-            Alert.alert('Success', 'Logged in successfully!');
-            navigation.navigate('HomeScreen');
-        } else {
-            Alert.alert('Error', response.message || 'Login failed');
-        }
-    } catch (error) {
-        Alert.alert('Error', 'Something went wrong');
+  const handleBiometricAuth = async () => {
+    const { available } = await rnBiometrics.isSensorAvailable();
+
+    if (!available) {
+      Alert.alert('Biometrics Not Available', 'Your device does not support biometric authentication.');
+      navigation.navigate('HomeScreen');
+      return;
     }
-};
+
+    rnBiometrics.simplePrompt({ promptMessage: 'Confirm biometric authentication' })
+      .then(resultObject => {
+        const { success } = resultObject;
+
+        if (success) {
+          Alert.alert('Success', 'Authenticated using biometrics');
+          navigation.navigate('HomeScreen');
+        } else {
+          Alert.alert('Cancelled', 'User cancelled biometric prompt');
+        }
+      })
+      .catch(() => {
+        Alert.alert('Failed', 'Biometric authentication failed');
+      });
+  };
+
+  const handleLogin = async (): Promise<void> => {
+    try {
+      const values: LoginValues = { username, password };
+
+      try {
+        await LoginSchema.validate(values, { abortEarly: false });
+        setErrors({});
+      } catch (validationError: any) {
+        const formErrors: { username?: string; password?: string } = {};
+        validationError.inner.forEach((err: any) => {
+          if (err.path) {
+            formErrors[err.path as keyof typeof formErrors] = err.message;
+          }
+        });
+        setErrors(formErrors);
+        return;
+      }
+
+      const response: LoginResponse = await loginUser(username, password);
+
+      if (response.success) {
+        Alert.alert('Success', 'Logged in successfully!');
+        await handleBiometricAuth(); // 👈 Trigger biometric after login
+      } else {
+        Alert.alert('Error', response.message || 'Login failed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Something went wrong');
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
 
-      <Formik
-        initialValues={{ username: '', password: '' }}
-        validationSchema={LoginSchema}
-        onSubmit={handleLogin}
-      >
-        {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
-          <>
-            <TextInput
-              placeholder="Username"
-              style={styles.input}
-              value={values.username}
-              onChangeText={handleChange('username')}
-              onBlur={handleBlur('username')}
-            />
-            {touched.username && errors.username && <Text style={styles.error}>{errors.username}</Text>}
+      <TextInput
+        placeholder="Username"
+        style={styles.input}
+        value={username}
+        onChangeText={setUsername}
+      />
+      {errors.username && <Text style={styles.error}>{errors.username}</Text>}
 
-            <TextInput
-              placeholder="Password"
-              style={styles.input}
-              value={values.password}
-              onChangeText={handleChange('password')}
-              onBlur={handleBlur('password')}
-              secureTextEntry
-            />
-            {touched.password && errors.password && <Text style={styles.error}>{errors.password}</Text>}
+      <TextInput
+        placeholder="Password"
+        style={styles.input}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      {errors.password && <Text style={styles.error}>{errors.password}</Text>}
 
-            <Button title="Login" onPress={() => handleSubmit()} />
+      <Button title="Login" onPress={handleLogin} />
 
-            <TouchableOpacity onPress={() => Alert.alert('Forgot Password', 'Forgot password flow goes here')}>
-              <Text style={styles.link}>Forgot Password?</Text>
-            </TouchableOpacity>
+      <TouchableOpacity onPress={() => Alert.alert('Forgot Password', 'Forgot password flow goes here')}>
+        <Text style={styles.link}>Forgot Password?</Text>
+      </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation?.navigate('RegisterScreen')}>
-              <Text style={styles.link}>New to the app? Register</Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </Formik>
+      <TouchableOpacity onPress={() => navigation?.navigate('RegisterScreen')}>
+        <Text style={styles.link}>New to the app? Register</Text>
+      </TouchableOpacity>
     </View>
   );
 }

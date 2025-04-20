@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import axios from 'axios';
+import { getQuestions } from '../utils/getQuestions';
+
+const POST_API_URL = `${process.env.BACKEND_URL}/addanswer`;
+
 const QuestionsForm: React.FC = () => {
   const [questions, setQuestions] = useState<string[]>([]);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
@@ -9,25 +13,22 @@ const QuestionsForm: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
-  // Replace with your actual API URLs
-  const GET_API_URL = `${process.env.BACKEND_URL}/questions`;
-  const POST_API_URL = `${process.env.BACKEND_URL}/addanswer`;
 
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const response = await axios.get(GET_API_URL);
+        // Assuming API returns an array of strings
         setQuestions(response.data.slice(0, 10)); // Get first 10 questions
       } catch (error) {
         Alert.alert('Error', 'Failed to load questions.');
         console.error(error);
       } finally {
         setLoading(false);
-      }
     };
   
     fetchQuestions();
-  }, []);
+  },[]);
 
   const handleNext = async () => {
     const currentQuestion = questions[currentIndex];

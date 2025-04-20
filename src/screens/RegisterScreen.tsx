@@ -273,6 +273,8 @@ const styles = StyleSheet.create({
   },
 });
 
+
+// Removed conflicting local declaration of useEffect
 // import React, { useState } from 'react';
 // import {StackNavigationProp } from '@react-navigation/stack';
 // import {
