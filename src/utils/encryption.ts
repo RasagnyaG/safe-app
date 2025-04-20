@@ -5,7 +5,7 @@ interface EncryptRequestBodyInput {
 }
 
 export const encryptRequestBody = async (body: EncryptRequestBodyInput): Promise<string> => {
-    const key: string | undefined = process.env.ENCRYPTION_KEY; // base64-encoded 32-byte key
+    const key: string | undefined = process.env.ENCRYPTION_KEY; 
     if (!key) {
         throw new Error('ENCRYPTION_KEY is not defined in environment variables');
     }

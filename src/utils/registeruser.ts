@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {encryptRequestBody} from'./encryption.js';
 import { Alert } from 'react-native';
 
@@ -22,6 +23,13 @@ export const registerUser = async (username: string,password:string,email : stri
         
           const result = await response.json();
           if (response.ok) {
+            const { accessToken, refreshToken } = result.data;
+            if (!accessToken || !refreshToken) {
+                Alert.alert('Error', 'Registration Failed');
+                return { success: false, message: 'Invalid response from server' };
+            }
+            await AsyncStorage.setItem('accessToken', accessToken);
+            await AsyncStorage.setItem('refreshToken', refreshToken);
             Alert.alert('Success', 'OTP sent successfully!');
           } else {
             Alert.alert('Error', result.message || 'Failed to send OTP.');

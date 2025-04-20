@@ -27,7 +27,7 @@ const QuestionsForm: React.FC = () => {
     };
 
     fetchQuestions();
-  }, []);
+  },[]);
 
   const handleNext = async () => {
     const currentQuestion = questions[currentIndex];
