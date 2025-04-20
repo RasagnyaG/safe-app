@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import ReactNativeBiometrics from 'react-native-biometrics';
+import {StackNavigationProp } from '@react-navigation/stack';
+
 import {
   View,
   Text,
@@ -11,6 +14,7 @@ import {
 } from 'react-native';
 import * as Yup from 'yup';
 import { registerUser } from '../utils/registeruser';
+import { useEffect } from 'react';
 
 interface FormValues {
   username: string;
@@ -56,7 +60,19 @@ const RegisterSchema = Yup.object().shape({
   (values: any) => !!values.email || !!values.phone
 );
 
-const RegisterScreen: React.FC = () => {
+
+type RootStackParamList = {
+  Login: undefined;
+  HomeScreen: undefined;
+  RegisterScreen: undefined;
+  Register: undefined; // Added 'Register' key
+  QuestionsForm: undefined; // Added 'QuestionsForm' key
+};
+
+type RegistrationScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
+
+export default function RegisterScreen({ navigation }: { navigation: RegistrationScreenNavigationProp }) {
+
   const [formValues, setFormValues] = useState<FormValues>({
     username: '',
     email: '',
@@ -69,23 +85,51 @@ const RegisterScreen: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
+  const [biometryAvailable, setBiometryAvailable] = useState(false);
+
 
   const handleChange = (field: keyof FormValues, value: string) => {
     setFormValues(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleGetOtp = async () => {
+//   const handleGetOtp = async () => {
+//     try {
+//       await RegisterSchema.validate(formValues, { abortEarly: false });
+
+//       const {
+//         username,
+//         email,
+//         phone,
+//         password,
+//         alt_email,
+//         alt_phoneno,
+//       } = formValues;
+
+//       await registerUser(username, email, phone, password, alt_email, alt_phoneno);
+//       Alert.alert('Success', 'OTP sent successfully!');
+//     } catch (err: any) {
+//       if (err.inner) {
+//         const formErrors: Partial<Record<keyof FormValues, string>> = {};
+//         err.inner.forEach((e: Yup.ValidationError) => {
+//           formErrors[e.path as keyof FormValues] = e.message;
+//         });
+//         setErrors(formErrors);
+//       } else {
+//         Alert.alert('Error', 'Validation or submission failed');
+//       }
+//     }
+//   };
+
+const handleGetOtp = async () => {
+    if (!biometryAvailable) {
+      Alert.alert('Biometric Required', 'Biometric sensor not available. Cannot register.');
+      return;
+    }
+
     try {
       await RegisterSchema.validate(formValues, { abortEarly: false });
 
-      const {
-        username,
-        email,
-        phone,
-        password,
-        alt_email,
-        alt_phoneno,
-      } = formValues;
+      const { username, email, phone, password, alt_email, alt_phoneno } = formValues;
 
       await registerUser(username, email, phone, password, alt_email, alt_phoneno);
       Alert.alert('Success', 'OTP sent successfully!');
@@ -102,6 +146,7 @@ const RegisterScreen: React.FC = () => {
     }
   };
 
+
   const inputFields: FieldProps[] = [
     { field: 'username', placeholder: 'Username' },
     { field: 'email', placeholder: 'Email', keyboardType: 'email-address' },
@@ -111,6 +156,23 @@ const RegisterScreen: React.FC = () => {
     { field: 'alt_email', placeholder: 'Alternate Email', keyboardType: 'email-address' },
     { field: 'alt_phoneno', placeholder: 'Alternate Phone', keyboardType: 'phone-pad' },
   ];
+
+
+  useEffect(() => {
+    const checkBiometrics = async () => {
+      const rnBiometrics = new ReactNativeBiometrics();
+      const { available, biometryType } = await rnBiometrics.isSensorAvailable();
+
+      if (available && (biometryType === 'TouchID' || biometryType === 'FaceID' || biometryType === 'Biometrics')) {
+        setBiometryAvailable(true);
+      } else {
+        Alert.alert('Biometric Required', 'Your device does not support biometric authentication. Registration is not allowed.');
+        setBiometryAvailable(false);
+      }
+    };
+
+    checkBiometrics();
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -136,12 +198,15 @@ const RegisterScreen: React.FC = () => {
         <TouchableOpacity style={styles.button} onPress={handleGetOtp}>
           <Text style={styles.buttonText}>Get OTP</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('QuestionsForm')}>
+  <Text style={styles.buttonText}>Next</Text>
+</TouchableOpacity>
+
       </View>
     </ScrollView>
   );
 };
 
-export default RegisterScreen;
 
 const styles = StyleSheet.create({
   scrollContainer: {
@@ -210,6 +275,8 @@ const styles = StyleSheet.create({
 
 
 
+
+// Removed conflicting local declaration of useEffect
 // import React, { useState } from 'react';
 // import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 // import * as Yup from 'yup';
