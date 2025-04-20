@@ -4,7 +4,7 @@ import axios from 'axios';
 import { getQuestions } from '../utils/getQuestions';
 
 const POST_API_URL = `${process.env.BACKEND_URL}/addanswer`;
-
+const GET_API_URL = `${process.env.BACKEND_URL}/getquestions`;
 const QuestionsForm: React.FC = () => {
   const [questions, setQuestions] = useState<string[]>([]);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
