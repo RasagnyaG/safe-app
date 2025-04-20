@@ -17,17 +17,17 @@ const QuestionsForm: React.FC = () => {
     const fetchQuestions = async () => {
       try {
         const response = await axios.get(GET_API_URL);
-        // Assuming API returns an array of strings
         setQuestions(response.data.slice(0, 10)); // Get first 10 questions
       } catch (error) {
         Alert.alert('Error', 'Failed to load questions.');
         console.error(error);
       } finally {
         setLoading(false);
+      }
     };
-
+  
     fetchQuestions();
-  },[]);
+  }, []);
 
   const handleNext = async () => {
     const currentQuestion = questions[currentIndex];
