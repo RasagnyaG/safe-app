@@ -1,7 +1,7 @@
 import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
 import * as Yup from 'yup';
-import ReactNativeBiometrics from 'react-native-biometrics'; // 👈 Import biometrics
+import ReactNativeBiometrics from 'react-native-biometrics';
 import { loginUser } from '../utils/loginuser.js';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -16,6 +16,7 @@ type RootStackParamList = {
   Login: undefined;
   HomeScreen: undefined;
   RegisterScreen: undefined;
+  ForgotPasswordScreen: undefined;
 };
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -82,7 +83,7 @@ export default function LoginScreen({ navigation }: { navigation: LoginScreenNav
 
       if (response.success) {
         Alert.alert('Success', 'Logged in successfully!');
-        await handleBiometricAuth(); // 👈 Trigger biometric after login
+        await handleBiometricAuth();
       } else {
         Alert.alert('Error', response.message || 'Login failed');
       }
@@ -114,7 +115,8 @@ export default function LoginScreen({ navigation }: { navigation: LoginScreenNav
 
       <Button title="Login" onPress={handleLogin} />
 
-      <TouchableOpacity onPress={() => Alert.alert('Forgot Password', 'Forgot password flow goes here')}>
+      <TouchableOpacity onPress={() => navigation?.navigate('ForgotPasswordScreen')} style={{ marginTop: 12 }
+      }>
         <Text style={styles.link}>Forgot Password?</Text>
       </TouchableOpacity>
 
