@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import { Platform } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import {
     addToWhitelist,
     useFreeRasp,
@@ -11,6 +12,13 @@ import { commonChecks, iosChecks, androidChecks } from './checks.ts';
 import { useEffect } from 'react';
 import RegisterScreen from './screens/RegisterScreen'
 import QuestionsForm from './screens/QuestionsForm.tsx';
+import LoginScreen from './screens/LoginScreeen.tsx';
+import { createStackNavigator } from '@react-navigation/stack';
+import { enableScreens } from 'react-native-screens';
+enableScreens();
+
+global.Buffer = require('buffer').Buffer;
+
 
 const App = () => {
     const [appChecks, setAppChecks] = React.useState([
@@ -33,8 +41,8 @@ const App = () => {
             certificateHashes: ['AKoRuyLMM91E7lX/Zqp3u4jMmd0A7hH/Iqozu0TMVd0='],
             // supportedAlternativeStores: ['storeOne', 'storeTwo'],
             malwareConfig: {
-                // blacklistedHashes: ['FgvSehLMM91E7lX/Zqp3u4jMmd0A7hH/Iqozu0TMVd0u'],
-                // blacklistedPackageNames: ['com.freeraspreactnativeexample'],
+                blacklistedHashes: ['FgvSehLMM91E7lX/Zqp3u4jMmd0A7hH/Iqozu0TMVd0u'],
+                blacklistedPackageNames: ['com.freeraspreactnativeexample', 'com.google.android.apps.nbu.paisa.user'],
                 suspiciousPermissions: [
                     [
                         'android.permission.INTERNET',
@@ -231,9 +239,39 @@ const App = () => {
 
     useFreeRasp(config, actions);
 
-//     return <DemoApp checks={appChecks} suspiciousApps={suspiciousApps} />;
-// return <RegisterScreen/>
-return <QuestionsForm/>
+
+    type RootStackParamList = {
+        Login: undefined;
+        HomeScreen: undefined;
+        Register: undefined;
+        QuestionsForm: undefined;
+        Demo: {
+            checks: { name: string; status: string }[];
+            suspiciousApps: SuspiciousAppInfo[];
+        };
+    };
+
+    const Stack = createStackNavigator<RootStackParamList>();
+
+
+    return (
+        <NavigationContainer>
+            <Stack.Navigator initialRouteName="Register">
+                <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="QuestionsForm" component={QuestionsForm} />
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Demo">
+                    {() => <DemoApp checks={appChecks} suspiciousApps={suspiciousApps} />}
+                </Stack.Screen>
+
+            </Stack.Navigator>
+        </NavigationContainer>
+
+    )
+
+    return <DemoApp checks={appChecks} suspiciousApps={suspiciousApps} />;
+    // return <RegisterScreen navigation={{ navigate: () => { }, goBack: () => { } }} />
+    // return <QuestionsForm navigation={{ navigate: () => { }, goBack: () => { } }} />
 };
 
 export default App;

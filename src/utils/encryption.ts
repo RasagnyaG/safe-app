@@ -1,30 +1,44 @@
-import Aes, { Algorithms } from 'react-native-aes-crypto';
+import Aes from 'react-native-aes-crypto';
+import {Buffer} from 'buffer';
 
 interface EncryptRequestBodyInput {
-    [key: string]: any; // Adjust this type based on the expected structure of the body
+  [key: string]: any;
 }
 
-export const encryptRequestBody = async (body: EncryptRequestBodyInput): Promise<string> => {
-    const key: string | undefined = process.env.ENCRYPTION_KEY; 
-    if (!key) {
-        throw new Error('ENCRYPTION_KEY is not defined in environment variables');
-    }
-    const decodedKey: string = Buffer.from(key, 'base64').toString('utf8'); // decode to raw 32-byte key string
-    const ivRaw: string = await Aes.randomKey(12); // 12-byte IV (GCM requires this length)
+export const encryptRequestBody = async (
+  body: EncryptRequestBodyInput,
+): Promise<string> => {
+  const keyBase64 = process.env.ENCRYPTION_KEY;
+  if (!keyBase64) {
+    throw new Error('ENCRYPTION_KEY is not defined in environment variables');
+  }
 
-    const jsonString: string = JSON.stringify(body);
+  // Convert base64 key to hex for AES.encrypt
+  const keyHex = Buffer.from(keyBase64, 'base64').toString('hex');
 
-    // Encrypt using aes-256-gcm
-    const encrypted: string = await Aes.encrypt(jsonString, decodedKey, ivRaw, 'aes-256-gcm' as Algorithms);
+  // Generate 12-byte IV (GCM standard)
+  const ivHex = await Aes.randomKey(12); // hex string
 
-    // The tag is always the last 16 bytes = 24 base64 characters (GCM tag)
-    const tag: string = encrypted.substring(encrypted.length - 24);
-    const content: string = encrypted.substring(0, encrypted.length - 24);
+  const plaintext = JSON.stringify(body);
 
-    const iv: string = Buffer.from(ivRaw, 'utf8').toString('base64');
-    const ciphertext: string = Buffer.from(content, 'utf8').toString('base64');
-    const authTag: string = Buffer.from(tag, 'utf8').toString('base64');
+  // Encrypt using AES-GCM, using type assertion to bypass the 'Algorithms' type
+  // Encrypt using AES-256-GCM
+  const encryptedHex = await Aes.encrypt(
+    plaintext,
+    keyHex,
+    ivHex,
+    'aes-256-gcm' as any,
+  );
 
-    // Send data in format: base64(content):base64(iv):base64(tag)
-    return `${ciphertext}:${iv}:${authTag}`;
+  // Extract the tag (last 32 hex characters)
+  const tagHex = encryptedHex.slice(-32);
+  const ciphertextHex = encryptedHex.slice(0, -32);
+
+  // Convert to base64 for transmission
+  const ciphertextBase64 = Buffer.from(ciphertextHex, 'hex').toString('base64');
+  const ivBase64 = Buffer.from(ivHex, 'hex').toString('base64');
+  const tagBase64 = Buffer.from(tagHex, 'hex').toString('base64');
+
+  // Format: base64(c):base64(iv):base64(tag)
+  return `${ciphertextBase64}:${ivBase64}:${tagBase64}`;
 };

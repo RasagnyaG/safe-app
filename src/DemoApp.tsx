@@ -84,7 +84,7 @@ export const DemoApp: React.FC<{
                                 </TouchableOpacity>
                             </HStack>
                         )}
-                        <Text style={styles.titleText}>freeRASP checks:</Text>
+                        <Text style={styles.titleText}>Integrity checks:</Text>
                         {checks.map((check: any, idx: number) => (
                             <Box
                                 key={idx}

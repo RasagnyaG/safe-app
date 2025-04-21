@@ -15,6 +15,9 @@ import {
 import * as Yup from 'yup';
 import { registerUser } from '../utils/registeruser';
 import { useEffect } from 'react';
+import axios from 'axios';
+import { encryptRequestBody } from '../utils/encryption.ts';
+import { BACKEND_URL } from '@env';
 
 interface FormValues {
   username: string;
@@ -66,7 +69,8 @@ type RootStackParamList = {
   HomeScreen: undefined;
   RegisterScreen: undefined;
   Register: undefined; // Added 'Register' key
-  QuestionsForm: undefined; // Added 'QuestionsForm' key
+  QuestionsForm: undefined; 
+  Demo: undefined// Added 'QuestionsForm' key
 };
 
 type RegistrationScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
@@ -86,6 +90,8 @@ export default function RegisterScreen({ navigation }: { navigation: Registratio
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
   const [biometryAvailable, setBiometryAvailable] = useState(false);
+  const [otpsent, setOtpsent] = useState(false);
+  const [otp, setOtp] =  useState('');
 
 
   const handleChange = (field: keyof FormValues, value: string) => {
@@ -121,30 +127,97 @@ export default function RegisterScreen({ navigation }: { navigation: Registratio
 //   };
 
 const handleGetOtp = async () => {
-    if (!biometryAvailable) {
-      Alert.alert('Biometric Required', 'Biometric sensor not available. Cannot register.');
-      return;
-    }
+    // if (!biometryAvailable) {
+    //   Alert.alert('Biometric Required', 'Biometric sensor not available. Cannot register.');
+    //   return;
+    // }
 
     try {
       await RegisterSchema.validate(formValues, { abortEarly: false });
+      console.log("Form values validated successfully");
 
-      const { username, email, phone, password, alt_email, alt_phoneno } = formValues;
+      const { phone} = formValues;
+      console.log(phone) 
 
-      await registerUser(username, email, phone, password, alt_email, alt_phoneno);
+      // const encryptedData = await encryptRequestBody({phoneno: phone})
+      // console.log("encrypted data")
+      // console.log(encryptedData)
+      const encryptedData = {phoneno: phone}
+      console.log(`${BACKEND_URL}/otp/send-otp`)
+      const response = await fetch(`${BACKEND_URL}/otp/send-otp`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: encryptedData }),
+    })
+    console.log(response)
+
+    if (response.ok){
+      setOtpsent(true);
       Alert.alert('Success', 'OTP sent successfully!');
+      return
+    }
+    else {
+      Alert.alert('Error', 'Failed to send OTP');
+    }
+      // await registerUser(username, email, phone, password, alt_email, alt_phoneno);
+      // Alert.alert('Success', 'OTP sent successfully!');
     } catch (err: any) {
-      if (err.inner) {
-        const formErrors: Partial<Record<keyof FormValues, string>> = {};
-        err.inner.forEach((e: Yup.ValidationError) => {
-          formErrors[e.path as keyof FormValues] = e.message;
-        });
-        setErrors(formErrors);
-      } else {
-        Alert.alert('Error', 'Validation or submission failed');
-      }
+      // if (err.inner) {
+      //   const formErrors: Partial<Record<keyof FormValues, string>> = {};
+      //   err.inner.forEach((e: Yup.ValidationError) => {
+      //     formErrors[e.path as keyof FormValues] = e.message;
+      //   });
+      //   setErrors(formErrors);
+      // } else {
+      //   Alert.alert('Error', 'Validation or submission failed');
+      // }
+
+      Alert.alert('Error', err.message)
     }
   };
+
+  const verifyOtp = async () => {
+    try {
+      // const encryptedData = await encryptRequestBody({otp: otp, phoneno: formValues.phone})
+      // console.log("encrypted data")
+      // console.log(encryptedData)
+      const encryptedData = {otp: otp, phoneno: formValues.phone}
+      console.log(`${BACKEND_URL}/otp/verify-otp`)
+      const response = await fetch(`${BACKEND_URL}/otp/verify-otp`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: encryptedData }),
+    })
+    console.log(response)
+
+    if (response.ok){
+      const data = await response.json();
+
+      if (data.success){
+        Alert.alert('Success', 'OTP verified successfully!');
+        const {username, email, phone, password, alt_email, alt_phoneno} = formValues;
+  
+        await registerUser(username, email, phone, password, alt_email, alt_phoneno);
+        navigation.navigate('QuestionsForm')
+        return;
+      }
+      else {
+        Alert.alert('Error', data.message || 'Failed to verify OTP');
+        return;
+      }
+     
+    }
+    else {
+      Alert.alert('Error',  'Failed to verify OTP');
+    }
+  } catch (err: any) {
+    Alert.alert('Error', err.message)
+  }
+}
 
 
   const inputFields: FieldProps[] = [
@@ -198,6 +271,22 @@ const handleGetOtp = async () => {
         <TouchableOpacity style={styles.button} onPress={handleGetOtp}>
           <Text style={styles.buttonText}>Get OTP</Text>
         </TouchableOpacity>
+        {otpsent && (
+  <View style={styles.otpRow}>
+    <TextInput
+      placeholder="Enter the OTP"
+      style={[styles.otpInput,  styles.inputErrorBorder]}
+      value={otp}
+      onChangeText={text => setOtp(text)}
+      placeholderTextColor="#888"
+      keyboardType="number-pad"
+    />
+    <TouchableOpacity style={styles.otpButton} onPress={verifyOtp}>
+      <Text style={styles.otpButtonText}>✔</Text>
+    </TouchableOpacity>
+  </View>
+)}
+
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('QuestionsForm')}>
   <Text style={styles.buttonText}>Next</Text>
 </TouchableOpacity>
@@ -205,7 +294,8 @@ const handleGetOtp = async () => {
       </View>
     </ScrollView>
   );
-};
+  };
+
 
 
 const styles = StyleSheet.create({
@@ -270,6 +360,33 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     fontSize: 16,
+  },
+  otpRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  otpInput: {
+    flex: 1,
+    backgroundColor: '#f8f9fc',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  otpButton: {
+    marginLeft: 8,
+    backgroundColor: '#4a90e2',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+  otpButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

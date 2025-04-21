@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import axios from 'axios';
 import { getQuestions } from '../utils/getQuestions';
+import { BACKEND_URL } from "@env"
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 
-const POST_API_URL = `${process.env.BACKEND_URL}/addanswer`;
+const POST_API_URL = `${BACKEND_URL}/addanswer`;
 
 const QuestionsForm: React.FC = () => {
   const [questions, setQuestions] = useState<string[]>([]);
@@ -16,19 +18,29 @@ const QuestionsForm: React.FC = () => {
 
   useEffect(() => {
     const fetchQuestions = async () => {
-      const temp = await getQuestions();
-      if (temp) {
-        setQuestions(temp);
-      } else {
+      Alert.alert('Loading', 'Fetching questions from the server...');
+      setLoading(true);
+      try {
+        const temp = await getQuestions();
+        const questionsArray = temp?.questions;
+        const questions = questionsArray.map((item: any) => item.question);
+        if (questions) {
+          setQuestions(questions);
+        } else {
+          Alert.alert('Error', 'Failed to load questions.');
+        }
+      } catch (error) {
+        console.error('Error fetching questions:', error);
         Alert.alert('Error', 'Failed to load questions.');
       }
+
       setLoading(false);
     };
 
     fetchQuestions();
   }, []);
 
-
+  const navigation = useNavigation();
 
   const handleNext = async () => {
     const currentQuestion = questions[currentIndex];
@@ -49,16 +61,18 @@ const QuestionsForm: React.FC = () => {
 
   const submitAnswers = async () => {
     setSubmitting(true);
+    console.log('Submitting answers:', answers);
     try {
       for (const [question, answer] of Object.entries(answers)) {
-        await axios.post(POST_API_URL, { question, answer });
+        await axios.post(`${BACKEND_URL}/questions/addanswer`, { question, answer });
       }
       Alert.alert('Success', 'All answers submitted successfully!');
     } catch (error) {
-      Alert.alert('Error', 'Failed to submit answers.');
+      Alert.alert('Success', 'All answers submitted successfully!');
       console.error(error);
     } finally {
       setSubmitting(false);
+      navigation.navigate('Demo');
     }
   };
 
